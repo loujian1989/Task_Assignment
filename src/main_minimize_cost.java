@@ -20,7 +20,7 @@ public class main_minimize_cost {
         File writename = new File("test_out");
         writename.createNewFile();
         BufferedWriter out = new BufferedWriter(new FileWriter(writename));
-
+        
 
         int T= cin.nextInt(); //number of task
         int R= cin.nextInt(); //number of resource types
