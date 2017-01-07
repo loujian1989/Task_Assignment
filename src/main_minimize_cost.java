@@ -20,11 +20,11 @@ public class main_minimize_cost {
         File writename = new File("test_out");
         writename.createNewFile();
         BufferedWriter out = new BufferedWriter(new FileWriter(writename));
-        
+
 
         int T= cin.nextInt(); //number of task
         int R= cin.nextInt(); //number of resource types
-        int N= cin.nextInt(); //nunber of players
+        int N= cin.nextInt(); //number of players
         int K= cin.nextInt(); //the maximum size of a team
 
         double[][] resource_need= new double[T][R];  //R_{t,r}
