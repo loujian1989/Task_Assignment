@@ -15,6 +15,7 @@ import java.util.Scanner;
 
 public class minimize_cost {
 
+
     int T, R, N, K;
     double[][] resource_need;  //R_{t,r}
     double[][] lost_for_resource;  //l_{i,r}

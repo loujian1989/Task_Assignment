@@ -62,6 +62,7 @@ public class individual_stability {
             IloCplex cplex = new IloCplex();
             // create model and solve it
 
+
             //lower bound and upper bound of x
             double[] lb_x = new double[(N)*(R)];
             double[] ub_x = new double[(N)*(R)];
@@ -247,6 +248,8 @@ public class individual_stability {
                 }
             }
 
+            cplex.exportModel("individual_stability.lp");
+
             cplex.end();
 
         } catch (IloException e) {
@@ -256,5 +259,8 @@ public class individual_stability {
         return 0;
 
     }
+
+
+
 
 }
