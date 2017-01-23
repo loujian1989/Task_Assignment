@@ -4,7 +4,7 @@ import ilog.cplex.*;
 /**
  * Created by loujian on 1/8/17.
  */
-public class oracle {
+public class oracle { 
 
     IloCplex cplex_oracle;
     int T, R, N, K;
@@ -230,7 +230,7 @@ public class oracle {
                         for(int i2=0; i2< N; i2++)
                             rng[8][t1*(T*N*N) + t2*(N*N) + i1* N + i2] = cplex_oracle.addLe( cplex_oracle.sum( z[t1*(T*N*N) + t2*(N*N) + i1* N + i2], cplex_oracle.negative(p[t2*N+ i2])), 0);
 
-            //add constraint 9: z_{t, t', i, i'} \geq p_{t, i}+ p_{t', i'}-1
+            //add constraint 9: p_{t, i}+ p_{t', i'} - z_{t, t', i, i'} \leq 1
             rng[9]= new IloRange[T*T*N*N];
             for(int t1=0; t1<T; t1++)
                 for(int t2=0; t2<T; t2++)

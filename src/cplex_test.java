@@ -29,6 +29,7 @@ class cplex_test {
             double[] ub = {40.0, Double.MAX_VALUE, Double.MAX_VALUE};
             IloNumVar[] x = cplex.numVarArray(3, lb, ub);
 
+
             double[] objvals = {1.0, 2.0, 3.0};
 
             cplex.addMaximize(cplex.scalProd(x, objvals));  //scalProd():Creates and returns a linear expression representing the scalar product of the given variables.
