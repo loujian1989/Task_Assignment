@@ -15,8 +15,8 @@ public class Task_initial {
 
     public static void main(String[] args) throws Exception {
         //Here we read the data from a file, we can revise it later
-        Scanner cin = new Scanner(new File("tmp_test"));
-        File writename = new File("test_out");
+        Scanner cin = new Scanner(new File("N20T4R3.txt"));
+        File writename = new File("out_N20T4R3");
         writename.createNewFile();
         BufferedWriter out = new BufferedWriter(new FileWriter(writename));
 
@@ -24,16 +24,16 @@ public class Task_initial {
         int T = cin.nextInt(); //number of task
         int R = cin.nextInt(); //number of resource types
         int N = cin.nextInt(); //number of players
-        int K = cin.nextInt(); //the maximum size of a team
 
         double[][] resource_need = new double[T][R];  //R_{t,r}
         double[][] lost_for_resource = new double[N][R];  //l_{i,r}
         double[][] utility = new double[N][N]; //u_i(j);
         double[] Omega = new double[N]; //Omega_i, denote the upper bound of epsilon
         double[] alpha = new double[N]; //alpha_i, denote the weight of epsilon for each player
+        double[][]upper_bound_player = new double[N][R];
 
         for (int i = 0; i < N; i++)
-            Omega[i] = 10000; //here we just set Omega to some value
+            Omega[i] = 1000; //here we just set Omega to some value
 
         //input the data from the file
         for (int t = 0; t < T; t++)
@@ -51,6 +51,11 @@ public class Task_initial {
         for (int i = 0; i < N; i++)
             alpha[i] = cin.nextDouble();
 
+        for(int i=0; i<N; i++)
+            for(int r=0; r<R; r++)
+                upper_bound_player[i][r]=cin.nextDouble();
+
+
         //For now we can start the optimization
 
         try {
@@ -59,8 +64,31 @@ public class Task_initial {
             IloRange[][] rng = new IloRange[15][]; // Here we denote 30 kinds of constraints, we can define all these kinds of constraints later
 
 
-            IloIntVar[] x = task_solver.boolVarArray(N * R);
-            IloNumVar[] y = task_solver.boolVarArray(T * N * R);
+            //lower bound and upper bound of x
+            double[] lb_x = new double[(N)*(R)];
+            double[] ub_x = new double[(N)*(R)];
+            for(int i=0; i<N; i++)
+                for(int r=0; r<R; r++)
+                {
+                    lb_x[i*R + r]= 0;
+                    ub_x[i*R + r]= upper_bound_player[i][r];
+                }
+            //define the variable x
+            IloNumVar[] x= task_solver.numVarArray(N*R, lb_x, ub_x);
+
+            //lower bound and upper bound of y
+            double[] lb_y= new double[(T)*(N)*(R)];
+            double[] ub_y= new double[(T)*(N)*(R)];
+
+            for(int t=0; t<T; t++)
+                for(int i=0; i<N; i++)
+                    for(int r=0; r<R; r++)
+                    {
+                        lb_y[t*(N*R)+ i*R + r] = 0;
+                        ub_y[t*(N*R)+ i*R + r] = Double.MAX_VALUE;
+                    }
+            //define the variable y
+            IloNumVar[] y= task_solver.numVarArray(T*N*R, lb_y, ub_y);
 
             //lower bound and upper bound of epsilon
             double[] lb_epsilon = new double[N];
@@ -118,7 +146,7 @@ public class Task_initial {
 
                 rng[0][i] = task_solver.addLe(task_solver.scalProd(p, binary_vector), 1);
             }
-
+/*
             //add constraint 1: \sum_{i\in I} p_{t, i}\leq K, \forall t\in T
             rng[1] = new IloRange[T];
             for (int t = 0; t < T; t++) {
@@ -131,7 +159,7 @@ public class Task_initial {
 
                 rng[1][t] = task_solver.addLe(task_solver.scalProd(p, binary_vector), K);
             }
-
+*/
             //add constraint 2: \sum_{i\in I} y_{t, i, r} \geq R_{t, r}, \forall, t\in T, r\in R
             rng[2] = new IloRange[T * R];
             for (int t = 0; t < T; t++)
@@ -168,26 +196,26 @@ public class Task_initial {
                         rng[3][t1*(T*N)+ t2*N+ i]= task_solver.addGe(task_solver.sum(task_solver.scalProd(temp_vector1, z), task_solver.negative(task_solver.scalProd(temp_vector2, z)), delta[t1*N+ i]), 0);
                     }
 
-            //add constraint 4 : y_{t, i, r} - p_{t, i} \leq 0, \forall t\in T, i\in I, r\in R
-            rng[4] = new IloRange[T * N * R];
-            for (int t = 0; t < T; t++)
-                for (int i = 0; i < N; i++)
-                    for (int r = 0; r < R; r++)
-                        rng[4][t * (N * R) + i * R + r] = task_solver.addLe(task_solver.sum(y[t * (N * R) + i * R + r], task_solver.negative(p[t * N + i])), 0);
+            //add constrain 4 : y_{t, i, r} - U_{i, r} p_{t, i} \leq 0, \forall t\in T, i\in I, r\in R
+            rng[4] = new IloRange[T*N*R];
+            for(int t=0; t<T; t++)
+                for(int i=0; i<N; i++)
+                    for(int r=0; r<R; r++)
+                        rng[4][t*(N*R)+ i*R+ r] = task_solver.addLe(task_solver.sum( y[t*(N*R)+ i*R+ r], task_solver.prod( -upper_bound_player[i][r], p[t*N + i] )), 0);
 
             //add constraint 5: y_{t, i, r}- x_{i, r} \leq 0
-            rng[5] = new IloRange[T * N * R];
-            for (int t = 0; t < T; t++)
-                for (int i = 0; i < N; i++)
-                    for (int r = 0; r < R; r++)
-                        rng[5][t * (N * R) + i * R + r] = task_solver.addLe(task_solver.sum(y[t * (N * R) + i * R + r], task_solver.negative(x[i * R + r])), 0);
+            rng[5] = new IloRange[T*N*R];
+            for(int t=0; t<T; t++)
+                for(int i=0; i<N; i++)
+                    for(int r=0; r<R; r++)
+                        rng[5][t*(N*R)+ i*R+ r] = task_solver.addLe( task_solver.sum( y[t*(N*R)+ i*R+ r], task_solver.negative(x[i*R + r])), 0 );
 
-            //add constraint 6: x_{i, r} - y_{t, i, r} + p_{t, i} \leq U_{i, r}
-            rng[6] = new IloRange[T * N * R];
-            for (int t = 0; t < T; t++)
-                for (int i = 0; i < N; i++)
-                    for (int r = 0; r < R; r++)
-                        rng[6][t * (N * R) + i * R + r] = task_solver.addLe(task_solver.sum(x[i * R + r], task_solver.negative(y[t * (N * R) + i * R + r]), p[t * N + i]), 1);
+            //add constraint 6: x_{i, r} - y_{t, i, r} + U_{i, r} p_{t, i} \leq U_{i, r}
+            rng[6]= new IloRange[T*N*R];
+            for(int t=0; t<T; t++)
+                for(int i=0; i<N; i++)
+                    for(int r=0; r<R; r++)
+                        rng[6][t*(N*R)+ i*R+ r] = task_solver.addLe( task_solver.sum( x[i*R+ r], task_solver.negative(y[t*(N*R) + i*R + r]), task_solver.prod( upper_bound_player[i][r], p[t*N+ i] ) ) , upper_bound_player[i][r]);
 
             //add constraint 7: z_{t, t', i, i'}- p_{t, i} \leq 0
             rng[7] = new IloRange[T * T * N * N];

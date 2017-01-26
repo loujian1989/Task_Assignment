@@ -28,7 +28,7 @@ public class Task {
         int T= cin.nextInt(); //number of task
         int R= cin.nextInt(); //number of resource types
         int N= cin.nextInt(); //number of players
-        int K= cin.nextInt(); //the maximum size of a team
+        //int K= cin.nextInt(); //the maximum size of a team
 
         double[][] resource_need= new double[T][R];  //R_{t,r}
         double[][] lost_for_resource= new double[N][R];  //l_{i,r}
@@ -126,7 +126,7 @@ public class Task {
 
                 rng[0][i]= task_solver.addLe( task_solver.scalProd(p, binary_vector), 1);
             }
-
+/*
             //add constraint 1: \sum_{i\in I} p_{t, i}\leq K, \forall t\in T
             rng[1]= new IloRange[T];
             for(int t=0; t<T; t++)
@@ -140,7 +140,7 @@ public class Task {
 
                 rng[1][t] = task_solver.addLe( task_solver.scalProd(p, binary_vector), K );
             }
-
+*/
             //add constraint 2: \sum_{i\in I} y_{t, i, r} \geq R_{t, r}, \forall, t\in T, r\in R
             rng[2]= new IloRange[T*R];
             for(int t=0; t<T; t++)
